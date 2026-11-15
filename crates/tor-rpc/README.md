@@ -6,8 +6,8 @@ An RPC provider sees the IP address of every request it serves. Sending requests
 
 ## Shared and isolated clients
 
-- `TorRpc::connect` bootstraps one Tor client. Clones of it share its circuits and its HTTP connection pool.
-- `TorRpc::isolated` returns a new isolation group. Its streams never share circuits with the client it was created from or with any other isolated client. Clones of the returned value share that group.
+- [`TorRpc::connect`] bootstraps one Tor client. Clones of it share its circuits and its HTTP connection pool.
+- [`TorRpc::isolated`] returns a new isolation group. Its streams never share circuits with the client it was created from or with any other isolated client. Clones of the returned value share that group.
 
 Isolation is per group, not per request. Calling `isolated` once and reusing the value keeps every request on that group's circuits. Call it again for the next group that must not be linked to the previous one.
 
@@ -16,7 +16,7 @@ A typical split:
 - Use the bootstrapped client for requests that are safe to link and say nothing about a particular user, such as `eth_blockNumber`, `eth_getLogs` over a contract's full event range, or a query to a PIR server.
 - Take a new isolated client for each session about one user or address, and drop it when the session ends.
 
-`TorRpc::send` sends one JSON-RPC packet as a single HTTP POST, so batch the calls that belong to one group into one packet.
+[`TorRpc::send`] sends one JSON-RPC packet as a single HTTP POST, so batch the calls that belong to one group into one packet.
 
 ## Example
 
@@ -41,7 +41,7 @@ let nonce = provider.get_transaction_count(account).await?;
 # }
 ```
 
-Plain HTTP goes through the same circuits. `get`, `post` and `request` return the body and fail on a non-2xx status. `http` returns the full response, whatever its status.
+Plain HTTP goes through the same circuits. [`TorRpc::get`], [`TorRpc::post`] and [`TorRpc::request`] return the body and fail on a non-2xx status. [`TorRpc::http`] returns the full response, whatever its status.
 
 ```rust,no_run
 # async fn example(tor: kohaku_tor_rpc::TorRpc, query: Vec<u8>) -> anyhow::Result<()> {
