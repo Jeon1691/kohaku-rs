@@ -7,8 +7,8 @@ use alloy::{
     sol_types::SolValue,
 };
 use kohaku_tornadocash::{
-    Asset, Payer, Pool, ProvenWithdrawal, TornadoProviderExt, Withdrawal, WithdrawalError,
-    merkle_tree::MerkleProof,
+    Asset, CircuitArtifacts, Payer, Pool, ProvenWithdrawal, TornadoProviderExt, Withdrawal,
+    WithdrawalError, merkle_tree::MerkleProof,
 };
 use kohaku_userop_kit::{
     builder::UserOperationBuilder,
@@ -35,7 +35,8 @@ const SHADOW_VERIFIER: Address = address!("0x00000000000000000000000000004b6f686
 /// note is withdrawn to the recipient during validation and available during the operation's
 /// execution.
 pub trait UserOperationPaymasterExt: Sized {
-    /// Pays for this operation's gas out of `withdrawal`'s note.
+    /// Pays for this operation's gas out of `withdrawal`'s note, proving it with
+    /// `circuit_artifacts`.
     ///
     /// # Errors
     /// Returns an error if the pool has no paymaster, if the note cannot cover the operation's
@@ -44,6 +45,7 @@ pub trait UserOperationPaymasterExt: Sized {
         self,
         withdrawal: Withdrawal,
         merkle_proof: &MerkleProof,
+        circuit_artifacts: &CircuitArtifacts,
         provider: &impl Provider,
         bundler: &B,
         rng: &mut R,
@@ -76,6 +78,7 @@ impl<S> UserOperationPaymasterExt for UserOperationBuilder<S> {
         self,
         withdrawal: Withdrawal,
         merkle_proof: &MerkleProof,
+        circuit_artifacts: &CircuitArtifacts,
         provider: &impl Provider,
         bundler: &B,
         rng: &mut R,
@@ -106,7 +109,7 @@ impl<S> UserOperationPaymasterExt for UserOperationBuilder<S> {
                 fee,
                 refund: U256::ZERO,
             })
-            .prove(merkle_proof, rng)?;
+            .prove(merkle_proof, circuit_artifacts, rng)?;
 
         Ok(builder.with_paymaster_and_data(paymaster_address, encode_paymaster_data(&proven)))
     }

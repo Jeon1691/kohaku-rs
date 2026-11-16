@@ -3,11 +3,10 @@
 use rand::CryptoRng;
 use websnark_rs::proof::{Proof, prove_random};
 
-use crate::artifacts::{circuit, proving_key};
-
 mod artifacts;
 mod inputs;
 
+pub use artifacts::{CircuitArtifacts, CircuitArtifactsError};
 pub use inputs::CircuitInputs;
 
 #[derive(Debug, thiserror::Error)]
@@ -21,16 +20,17 @@ pub enum CircuitError {
     ToField(#[from] ruint::ToFieldError),
 }
 
-/// Generates a proof for the given circuit inputs.
+/// Generates a proof for the given circuit inputs with `circuit_artifacts`.
 ///
 /// # Errors
 /// Returns an error if the inputs are invalid or if the proof generation fails.
-pub fn prove(inputs: &CircuitInputs, rng: &mut impl CryptoRng) -> Result<Proof, CircuitError> {
-    let circuit = circuit();
-    let proving_key = proving_key();
-
+pub fn prove(
+    inputs: &CircuitInputs,
+    circuit_artifacts: &CircuitArtifacts,
+    rng: &mut impl CryptoRng,
+) -> Result<Proof, CircuitError> {
     let signals = inputs.as_signals()?;
-    let witness = circuit.witness(signals)?;
-    let (proof, _) = prove_random(proving_key, &witness, rng)?;
+    let witness = circuit_artifacts.circuit.witness(signals)?;
+    let (proof, _) = prove_random(&circuit_artifacts.proving_key, &witness, rng)?;
     Ok(proof)
 }

@@ -15,6 +15,7 @@ See [tornado-relayer](https://github.com/tornado-dao/tornado-relayer/tree/mainne
 # };
 # use kohaku_tornadocash::{
 #     merkle_tree::{MerkleTree, MerkleTreeExt},
+#     CircuitArtifacts,
 #     Note,
 #     Pool,
 #     Withdrawal,
@@ -24,6 +25,7 @@ See [tornado-relayer](https://github.com/tornado-dao/tornado-relayer/tree/mainne
 # async fn example(
 #     provider: DynProvider,
 #     tree: &MerkleTree,
+#     artifacts: &CircuitArtifacts,
 #     pool: Pool,
 #     note: Note,
 #     recipient: Address,
@@ -37,7 +39,7 @@ let merkle_proof = tree.note_proof(&note)?;
 
 let withdrawal = Withdrawal::new(&pool, note, recipient)
     .with_payer(payer)
-    .prove(&merkle_proof, rng)?;
+    .prove(&merkle_proof, artifacts, rng)?;
 
 // Confirmation is judged by the nullifier being spent on-chain, not by the relayer's report.
 let receipt = relayer.withdraw(withdrawal).await?;

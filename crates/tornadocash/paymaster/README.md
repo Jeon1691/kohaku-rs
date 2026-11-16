@@ -13,6 +13,7 @@ Supports sponsoring 4337 UserOps with Tornado Cash notes. Uses the [`privacy-pay
 # use alloy::{providers::DynProvider, signers::local::PrivateKeySigner};
 # use kohaku_tornadocash::{
 #     merkle_tree::{MerkleTree, MerkleTreeExt},
+#     CircuitArtifacts,
 #     Note,
 #     Pool,
 #     Withdrawal,
@@ -27,6 +28,7 @@ Supports sponsoring 4337 UserOps with Tornado Cash notes. Uses the [`privacy-pay
 # async fn example(
 #     provider: DynProvider,
 #     tree: &MerkleTree,
+#     artifacts: &CircuitArtifacts,
 #     pool: Pool,
 #     note: Note,
 #     rng: &mut impl rand::CryptoRng,
@@ -44,7 +46,7 @@ let builder = UserOperationBuilder::new_with_smart_account(&smart_account)
 let withdrawal_merkle_proof = tree.note_proof(&note)?;
 let withdrawal = Withdrawal::new(&pool, note, owner.address());
 let builder = builder
-    .with_tornado_paymaster(withdrawal, &withdrawal_merkle_proof, &provider, &bundler, rng)
+    .with_tornado_paymaster(withdrawal, &withdrawal_merkle_proof, artifacts, &provider, &bundler, rng)
     .await?;
 
 let userop = builder.build().sign(&owner).await?;

@@ -17,6 +17,7 @@ pub use asset::Asset;
 pub use call::Call;
 pub use deposit::Deposit;
 pub use field::{Field, FieldNotInRangeError};
+pub use kohaku_tornadocash_circuit::{CircuitArtifacts, CircuitArtifactsError};
 pub use note::{Note, NoteError, NoteString, Nullifier, Secret};
 pub use pool::Pool;
 pub use provider::TornadoProviderExt;

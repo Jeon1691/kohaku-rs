@@ -2,16 +2,18 @@
 name = "kohaku-tornadocash-circuit"
 version = "0.1.0"
 edition = "2024"
-description = "Tornado Cash withdrawal circuit artifacts and Groth16 prover"
+description = "Groth16 prover for the Tornado Cash withdrawal circuit"
 license.workspace = true
 repository.workspace = true
+# The artifacts stay in the repository for now; callers load them. Tests and benches read them
+# from the repository, so they are not packaged either.
+exclude = ["data/", "tests/", "benches/"]
 
 [features]
 default = []
 parallel = ["websnark-rs/parallel"]
 
 [dependencies]
-brotli = { workspace = true }
 postcard = { workspace = true }
 rand = { workspace = true }
 ruint = { workspace = true, features = ["ark-ff-06", "serde"] }
@@ -20,7 +22,12 @@ thiserror = { workspace = true }
 websnark-rs = { workspace = true }
 
 [dev-dependencies]
+brotli = { workspace = true }
 criterion = { workspace = true, features = ["async_tokio"] }
+flate2 = { workspace = true }
+insta = { workspace = true }
+postcard = { workspace = true, features = ["alloc"] }
+rand = { workspace = true, features = ["chacha"] }
 serde_json = { workspace = true }
 tokio = { workspace = true }
 
