@@ -23,7 +23,7 @@ alloy = { workspace = true, features = [
 anyhow = { workspace = true }
 brotli = { workspace = true }
 kohaku-tornadocash = { workspace = true }
-# Only the circuit crate, so the test artifacts do not need a dependency on core.
+# The test artifacts only need the circuit crate, not core.
 kohaku-tornadocash-circuit = { workspace = true }
 kohaku-tornadocash-relayer = { workspace = true }
 kohaku-userop-kit = { workspace = true }

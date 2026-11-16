@@ -46,7 +46,14 @@ let builder = UserOperationBuilder::new_with_smart_account(&smart_account)
 let withdrawal_merkle_proof = tree.note_proof(&note)?;
 let withdrawal = Withdrawal::new(&pool, note, owner.address());
 let builder = builder
-    .with_tornado_paymaster(withdrawal, &withdrawal_merkle_proof, artifacts, &provider, &bundler, rng)
+    .with_tornado_paymaster(
+        withdrawal,
+        &withdrawal_merkle_proof,
+        artifacts,
+        &provider,
+        &bundler,
+        rng,
+    )
     .await?;
 
 let userop = builder.build().sign(&owner).await?;

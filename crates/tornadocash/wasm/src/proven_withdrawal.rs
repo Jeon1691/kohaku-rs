@@ -69,7 +69,7 @@ mod tests {
         .unwrap()
         .with_payer(&payer);
         withdrawal
-            .prove(&proof, &circuit_artifacts::tests::artifacts())
+            .prove(&proof, &circuit_artifacts::test_utils::artifacts())
             .unwrap();
     }
 }

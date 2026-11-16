@@ -20,9 +20,10 @@ and `merkleProof`:
 
 ```js
 const response = await fetch("/artifacts.bin.gz");
-if (!response.ok) throw new Error(`artifacts: HTTP ${response.status}`);
+if (!response.ok || !response.body) throw new Error(`artifacts: HTTP ${response.status}`);
 const decompressed = response.body.pipeThrough(new DecompressionStream("gzip"));
 const bytes = new Uint8Array(await new Response(decompressed).arrayBuffer());
+// Keep `artifacts` for later proofs, and call `artifacts.free()` when done with it.
 const artifacts = CircuitArtifacts.fromBytes(bytes);
 
 const withdrawal = new Withdrawal(pool, note, recipient).withPayer(payer);
