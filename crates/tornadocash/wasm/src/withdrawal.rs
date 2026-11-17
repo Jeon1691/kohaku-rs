@@ -46,8 +46,7 @@ impl Withdrawal {
         }
     }
 
-    /// Consume this withdrawal and synchronously prove it against the borrowed Merkle proof with
-    /// the borrowed circuit artifacts.
+    /// Consume this withdrawal and synchronously prove it against the borrowed Merkle proof.
     ///
     /// Proving blocks the calling thread; callers choose whether to use a worker.
     ///

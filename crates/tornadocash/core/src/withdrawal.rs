@@ -72,7 +72,7 @@ impl Withdrawal {
         self
     }
 
-    /// Proves this withdrawal using the provided Merkle proof and `circuit_artifacts`.
+    /// Proves this withdrawal using the provided Merkle proof.
     ///
     /// `merkle_proof` must be a valid proof for this note's commitment against a
     /// recent Merkle root. Outdated proofs are rejected by the contract.

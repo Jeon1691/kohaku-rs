@@ -20,7 +20,7 @@ pub enum CircuitError {
     ToField(#[from] ruint::ToFieldError),
 }
 
-/// Generates a proof for the given circuit inputs with `circuit_artifacts`.
+/// Generates a proof for the given circuit inputs.
 ///
 /// # Errors
 /// Returns an error if the inputs are invalid or if the proof generation fails.
