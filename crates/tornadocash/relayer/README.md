@@ -15,11 +15,11 @@ See [tornado-relayer](https://github.com/tornado-dao/tornado-relayer/tree/mainne
 # };
 # use kohaku_tornadocash::{
 #     merkle_tree::{MerkleTree, MerkleTreeExt},
-#     CircuitArtifacts,
 #     Note,
 #     Pool,
 #     Withdrawal,
 # };
+# use kohaku_tornadocash_circuit::CircuitArtifacts;
 # use kohaku_tornadocash_relayer::Relayer;
 #
 # async fn example(

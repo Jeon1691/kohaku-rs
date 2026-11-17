@@ -7,9 +7,10 @@ use alloy::{
     sol_types::SolValue,
 };
 use kohaku_tornadocash::{
-    Asset, CircuitArtifacts, Payer, Pool, ProvenWithdrawal, TornadoProviderExt, Withdrawal,
-    WithdrawalError, merkle_tree::MerkleProof,
+    Asset, Payer, Pool, ProvenWithdrawal, TornadoProviderExt, Withdrawal, WithdrawalError,
+    merkle_tree::MerkleProof,
 };
+use kohaku_tornadocash_circuit::CircuitArtifacts;
 use kohaku_userop_kit::{
     builder::UserOperationBuilder,
     bundler::{Bundler, BundlerExt},
@@ -35,8 +36,7 @@ const SHADOW_VERIFIER: Address = address!("0x00000000000000000000000000004b6f686
 /// note is withdrawn to the recipient during validation and available during the operation's
 /// execution.
 pub trait UserOperationPaymasterExt: Sized {
-    /// Pays for this operation's gas out of `withdrawal`'s note, proving it with
-    /// `circuit_artifacts`.
+    /// Pays for this operation's gas out of `withdrawal`'s note.
     ///
     /// # Errors
     /// Returns an error if the pool has no paymaster, if the note cannot cover the operation's

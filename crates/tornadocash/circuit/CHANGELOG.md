@@ -6,7 +6,7 @@ All notable changes to `kohaku-tornadocash-circuit` are documented here. This cr
 
 ### Added
 
-- `CircuitArtifacts` and `CircuitArtifactsError`. The artifacts live in the repository as `data/artifacts.bin.br` and `data/artifacts.bin.gz` ([#145](https://github.com/ethereum/kohaku-rs/pull/145))
+- `CircuitArtifacts` and `CircuitArtifactsError` ([#145](https://github.com/ethereum/kohaku-rs/pull/145))
 
 ### Changed
 

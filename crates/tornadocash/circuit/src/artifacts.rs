@@ -11,20 +11,15 @@ pub enum CircuitArtifactsError {
 }
 
 /// The tornadocash-classic withdrawal circuit and its proving key.
-///
-/// Published in the repository as `data/artifacts.bin.br` and `data/artifacts.bin.gz`, which both
-/// decompress to the bytes [`CircuitArtifacts::from_bytes`] takes (about 26.3 MB). Decoding takes a
-/// while, so load this once and reuse it for every proof.
 #[derive(Clone, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct CircuitArtifacts {
-    pub(crate) circuit: Circuit,
-    pub(crate) proving_key: ProvingKey,
+    pub circuit: Circuit,
+    pub proving_key: ProvingKey,
 }
 
 impl CircuitArtifacts {
-    /// Decodes the artifacts from their decompressed, postcard-encoded bytes.
-    ///
-    /// This only checks the encoding, not that the artifacts are the published ones.
+    /// Decodes the artifacts from their postcard-encoded bytes.
     ///
     /// # Errors
     /// Returns an error if the bytes are not postcard-encoded artifacts, or have bytes left over.

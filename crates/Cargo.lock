@@ -3200,18 +3200,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "embedded-io"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef1a6892d9eef45c8fa6b9e0086428a2cca8491aca8f787c534a3d6d0bcb3ced"
-
-[[package]]
-name = "embedded-io"
-version = "0.6.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "edd0f118536f44f5ccd48bcb8b111bdc3de888b58c74639dfb034a357d0f206d"
-
-[[package]]
 name = "ena"
 version = "0.14.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4623,8 +4611,6 @@ version = "0.1.0"
 dependencies = [
  "brotli",
  "criterion 0.8.2",
- "flate2",
- "insta",
  "postcard",
  "rand 0.10.2",
  "ruint",
@@ -4657,6 +4643,7 @@ dependencies = [
  "insta",
  "kohaku-fork-kit",
  "kohaku-tornadocash",
+ "kohaku-tornadocash-circuit",
  "kohaku-tornadocash-syncer",
  "kohaku-userop-kit",
  "rand 0.10.2",
@@ -4676,6 +4663,7 @@ dependencies = [
  "insta",
  "kohaku-fork-kit",
  "kohaku-tornadocash",
+ "kohaku-tornadocash-circuit",
  "kohaku-tornadocash-syncer",
  "rand 0.10.2",
  "reqwest 0.13.4",
@@ -4721,6 +4709,7 @@ dependencies = [
  "hex",
  "js-sys",
  "kohaku-tornadocash",
+ "kohaku-tornadocash-circuit",
  "kohaku-tornadocash-relayer",
  "kohaku-tornadocash-syncer",
  "rand 0.10.2",
@@ -5699,8 +5688,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6764c3b5dd454e283a30e6dfe78e9b31096d9e32036b5d1eaac7a6119ccb9a24"
 dependencies = [
  "cobs",
- "embedded-io 0.4.0",
- "embedded-io 0.6.1",
  "heapless",
  "serde",
 ]

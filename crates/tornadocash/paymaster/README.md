@@ -13,11 +13,11 @@ Supports sponsoring 4337 UserOps with Tornado Cash notes. Uses the [`privacy-pay
 # use alloy::{providers::DynProvider, signers::local::PrivateKeySigner};
 # use kohaku_tornadocash::{
 #     merkle_tree::{MerkleTree, MerkleTreeExt},
-#     CircuitArtifacts,
 #     Note,
 #     Pool,
 #     Withdrawal,
 # };
+# use kohaku_tornadocash_circuit::CircuitArtifacts;
 # use kohaku_tornadocash_paymaster::UserOperationPaymasterExt;
 # use kohaku_userop_kit::{
 #     builder::UserOperationBuilder,

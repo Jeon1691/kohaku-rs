@@ -41,12 +41,12 @@ provider.send_transaction(deposit.call().into()).await?.watch().await?;
 # };
 # use kohaku_tornadocash::{
 #     merkle_tree::{MerkleTree, MerkleTreeExt},
-#     CircuitArtifacts,
 #     Note,
 #     Pool,
 #     event::Snapshot,
 #     Withdrawal,
 # };
+# use kohaku_tornadocash_circuit::CircuitArtifacts;
 # 
 # async fn example(
 #     provider: DynProvider,
