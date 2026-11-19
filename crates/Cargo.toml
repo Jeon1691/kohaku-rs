@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "account-checks",
     "fork-kit",
     "merkle-tree",
     "rpc-provider",
@@ -8,6 +9,7 @@ members = [
     "tornadocash/core",
     "tornadocash/keychain",
     "tornadocash/paymaster",
+    "tornadocash/provider",
     "tornadocash/relayer",
     "tornadocash/syncer",
     "tornadocash/wasm",
@@ -26,7 +28,7 @@ pedantic = { level = "warn", priority = -1 }
 result_large_err = { level = "allow" }
 
 [workspace.dependencies]
-alloy = "2.4.1"
+alloy = { version = "2.4.1", default-features = false }
 alloy-primitives = { version = "1.7", default-features = false }
 alloy-sol-types = "1.7"
 anyhow = "1.0.104"
@@ -39,9 +41,11 @@ cfg_aliases = "0.2.2"
 criterion = "0.8.2"
 flate2 = "1.1"
 futures = "0.3"
+getrandom_02 = { version = "0.2", package = "getrandom" }
 hex = "0.4.3"
 insta = "1.48.0"
 js-sys = "0.3.85"
+kohaku-account-checks = { version = "0.0.1", path = "account-checks" }
 kohaku-fork-kit = { path = "fork-kit" }
 kohaku-merkle-tree = { version = "0.1.0", path = "merkle-tree" }
 kohaku-rpc-provider = { version = "0.0.1", path = "rpc-provider" }
@@ -50,6 +54,7 @@ kohaku-tornadocash-circuit = { version = "0.1.0", path = "tornadocash/circuit" }
 kohaku-tornadocash = { version = "0.2.0", path = "tornadocash/core" }
 kohaku-tornadocash-keychain = { version = "0.0.1", path = "tornadocash/keychain" }
 kohaku-tornadocash-paymaster = { version = "0.0.1", path = "tornadocash/paymaster" }
+kohaku-tornadocash-provider = { version = "0.0.1", path = "tornadocash/provider" }
 kohaku-tornadocash-relayer = { version = "0.0.1", path = "tornadocash/relayer" }
 kohaku-tornadocash-syncer = { version = "0.0.1", path = "tornadocash/syncer" }
 kohaku-userop-kit = { version = "0.0.1", path = "userop-kit" }

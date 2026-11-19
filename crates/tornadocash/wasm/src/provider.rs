@@ -1,6 +1,7 @@
 use alloy::{providers::RootProvider, transports::http::reqwest::Url};
 use js_sys::{Array, Promise};
-use kohaku_tornadocash::{Field, TornadoProviderExt};
+use kohaku_tornadocash::Field;
+use kohaku_tornadocash_provider::TornadoProviderExt;
 use tsify::Ts;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::future_to_promise;
@@ -9,16 +10,20 @@ use crate::{Pool, hex::Hex};
 
 /// Read-only Tornado pool queries through an HTTP(S) RPC endpoint.
 ///
-/// See [`kohaku_tornadocash::TornadoProviderExt`] for canonical query semantics.
+/// See [`kohaku_tornadocash_provider::TornadoProviderExt`] for canonical query semantics.
 /// Calls snapshot their arguments and retain a provider handle before returning
 /// a Promise, so wrappers may be freed while a request is pending.
 #[wasm_bindgen]
 pub struct TornadoProvider {
     // Alloy RPC client; Tornado queries are provided by TornadoProviderExt.
-    inner: RootProvider,
+    pub(crate) inner: RootProvider,
 }
 
 #[wasm_bindgen]
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "wasm-bindgen cannot accept &[Ts<Hex>] in is_spent_array"
+)]
 impl TornadoProvider {
     /// Construct an Alloy HTTP provider without making a network request.
     ///
@@ -41,7 +46,7 @@ impl TornadoProvider {
     /// Rejects on invalid field hex or an RPC failure.
     #[wasm_bindgen(js_name = isSpent, unchecked_return_type = "Promise<boolean>")]
     pub fn is_spent(&self, pool: &Pool, hash: &Ts<Hex>) -> Promise {
-        let hash = decode_field(hash);
+        let hash = Hex::decode::<Field>(hash);
         let pool = pool.inner.clone();
         let provider = self.inner.clone();
         future_to_promise(async move {
@@ -58,10 +63,7 @@ impl TornadoProvider {
     /// Rejects on invalid field hex or an RPC failure.
     #[wasm_bindgen(js_name = isSpentArray, unchecked_return_type = "Promise<boolean[]>")]
     pub fn is_spent_array(&self, pool: &Pool, hashes: Vec<Ts<Hex>>) -> Promise {
-        let hashes: Result<Vec<_>, _> = hashes
-            .into_iter()
-            .map(|value| decode_field(&value))
-            .collect();
+        let hashes: Result<Vec<Field>, _> = hashes.iter().map(Hex::decode).collect();
         let pool = pool.inner.clone();
         let provider = self.inner.clone();
         future_to_promise(async move {
@@ -82,7 +84,7 @@ impl TornadoProvider {
     /// Rejects on invalid field hex or an RPC failure.
     #[wasm_bindgen(js_name = isKnownRoot, unchecked_return_type = "Promise<boolean>")]
     pub fn is_known_root(&self, pool: &Pool, root: &Ts<Hex>) -> Promise {
-        let root = decode_field(root);
+        let root = Hex::decode::<Field>(root);
         let pool = pool.inner.clone();
         let provider = self.inner.clone();
         future_to_promise(async move {
@@ -93,10 +95,6 @@ impl TornadoProvider {
             Ok(JsValue::from(result))
         })
     }
-}
-
-fn decode_field(value: &Ts<Hex>) -> Result<Field, JsError> {
-    Ok(value.to_rust()?.try_into()?)
 }
 
 #[cfg(all(test, target_arch = "wasm32"))]

@@ -7,10 +7,10 @@ use alloy::{
     sol_types::SolValue,
 };
 use kohaku_tornadocash::{
-    Asset, Payer, Pool, ProvenWithdrawal, TornadoProviderExt, Withdrawal, WithdrawalError,
-    merkle_tree::MerkleProof,
+    Asset, Payer, Pool, ProvenWithdrawal, Withdrawal, WithdrawalError, merkle_tree::MerkleProof,
 };
 use kohaku_tornadocash_circuit::CircuitArtifacts;
+use kohaku_tornadocash_provider::TornadoProviderExt;
 use kohaku_userop_kit::{
     builder::UserOperationBuilder,
     bundler::{Bundler, BundlerExt},

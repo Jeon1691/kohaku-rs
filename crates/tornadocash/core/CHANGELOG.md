@@ -4,6 +4,10 @@ All notable changes to `kohaku-tornadocash` are documented here. This crate foll
 
 ## 0.3.0 - UNRELEASED
 
+### Removed
+
+- **Breaking:** Removed `TornadoProviderExt` trait extension. Moved to `kohaku-tornadocash-provider` crate (#...)[]
+
 ### Changed
 
 - **Breaking:** `Withdrawal::prove` takes `&CircuitArtifacts` after the Merkle proof ([#145](https://github.com/ethereum/kohaku-rs/pull/145))
