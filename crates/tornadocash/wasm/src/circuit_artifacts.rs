@@ -23,6 +23,12 @@ impl CircuitArtifacts {
     }
 }
 
+impl From<CoreCircuitArtifacts> for CircuitArtifacts {
+    fn from(inner: CoreCircuitArtifacts) -> Self {
+        Self { inner }
+    }
+}
+
 #[cfg(all(test, target_arch = "wasm32"))]
 pub(crate) mod test_utils {
     use super::*;
