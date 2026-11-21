@@ -6,7 +6,7 @@ All notable changes to `kohaku-tornadocash-syncer` are documented here. This cra
 
 ### Fixed
 
-- `SagaSyncer` returns an HTTP error for a 4xx or 5xx manifest or chunk response, instead of parsing the body as JSON or gzip ([#NNN](https://github.com/ethereum/kohaku-rs/pull/NNN))
+- `SagaSyncer` returns an HTTP error for a 4xx or 5xx manifest or chunk response, instead of parsing the body as JSON or gzip ([#148](https://github.com/ethereum/kohaku-rs/pull/148))
 
 ## 0.0.1 - 2026-10-25
 
