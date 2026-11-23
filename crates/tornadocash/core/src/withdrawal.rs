@@ -21,7 +21,7 @@ use crate::{
 };
 
 /// A Tornado Cash withdrawal.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Withdrawal {
     pub pool: Pool,
     pub note: Note,
@@ -30,7 +30,7 @@ pub struct Withdrawal {
 }
 
 /// A proven Tornado Cash withdrawal.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ProvenWithdrawal {
     inner: Withdrawal,
     root: Field,

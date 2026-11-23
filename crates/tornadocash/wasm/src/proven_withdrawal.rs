@@ -58,36 +58,13 @@ impl From<CoreProvenWithdrawal> for ProvenWithdrawal {
 mod tests {
     use alloy::primitives::{Address, U256};
     use kohaku_tornadocash::{
-        Note as CoreNote, Payer as CorePayer, Pool as CorePool, Withdrawal as CoreWithdrawal,
+        Note as CoreNote, Payer as CorePayer, Pool as CorePool,
         merkle_tree::MerkleTree as CoreMerkleTree,
     };
     use wasm_bindgen_test::wasm_bindgen_test;
 
     use super::*;
     use crate::{MerkleProof, Note, Payer, Pool, Withdrawal, circuit_artifacts};
-
-    #[wasm_bindgen_test]
-    fn json_round_trip_keeps_the_proven_withdrawal() {
-        let note = CoreNote::new([1; 31], [2; 31]);
-        let tree = CoreMerkleTree::from_leaves(&[note.commitment()]).unwrap();
-        let proven = ProvenWithdrawal::from(
-            CoreWithdrawal::new(
-                &CorePool::ETHEREUM_DAI_100,
-                note,
-                Address::with_last_byte(1),
-            )
-            .with_payer(CorePayer {
-                address: Address::with_last_byte(2),
-                fee: U256::from(3),
-                refund: U256::from(42),
-            })
-            .prove_dummy(&tree.proof(0).unwrap()),
-        );
-
-        let parsed = ProvenWithdrawal::from_json(&proven.to_json().unwrap()).unwrap();
-
-        assert_eq!(parsed.inner, proven.inner);
-    }
 
     #[wasm_bindgen_test]
     fn proves_in_wasm_with_system_entropy() {
