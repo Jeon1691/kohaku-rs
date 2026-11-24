@@ -6,7 +6,7 @@ All notable changes to `kohaku-tornadocash-syncer` are documented here. This cra
 
 ### Changed
 
-- **Breaking:** `Syncer::sync_range` and `Syncer::sync` take a slice of pools and return one `Snapshot` per pool, in the same order ([#NNN](https://github.com/ethereum/kohaku-rs/pull/NNN))
+- **Breaking:** `Syncer::sync_range` and `Syncer::sync` take a slice of pools and return one `Snapshot` per pool, in the same order ([#155](https://github.com/ethereum/kohaku-rs/pull/155))
 
 ## 0.0.1 - 2026-10-25
 
