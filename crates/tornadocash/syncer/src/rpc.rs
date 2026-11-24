@@ -47,70 +47,88 @@ impl<P: Provider> RpcSyncer<P> {
 impl<P: Provider + Clone> Syncer for RpcSyncer<P> {
     async fn sync_range(
         &self,
-        pool: &Pool,
+        pools: &[Pool],
         from_block: u64,
         to_block: u64,
-    ) -> Result<Snapshot, SyncerError> {
+    ) -> Result<Vec<Snapshot>, SyncerError> {
         Ok(self
-            .sync(pool, from_block, to_block)
+            .sync(pools, from_block, to_block)
             .await
             .map_err(SyncerError::other)?)
     }
 }
 
 impl<P: Provider + Clone> RpcSyncer<P> {
+    /// Reads every pool's logs in one scan, then routes each log to its pools.
     async fn sync(
         &self,
-        pool: &Pool,
+        pools: &[Pool],
         from_block: u64,
         to_block: u64,
-    ) -> Result<Snapshot, RpcSyncerError> {
-        let range = self.block_range(pool, from_block, to_block).await?;
-        info!("Syncing from {} to {}", range.start, range.end);
+    ) -> Result<Vec<Snapshot>, RpcSyncerError> {
+        //? `latest_block` is an inclusive block number, `to_block` an exclusive bound.
+        let latest = self.provider.get_block_number().await?.saturating_add(1);
+        let to = to_block.min(latest);
+        let ranges: Vec<_> = pools
+            .iter()
+            .map(|pool| {
+                let from = from_block.max(pool.deployed_block);
+                from..to.max(from)
+            })
+            .collect();
+        let mut events = vec![Vec::new(); pools.len()];
 
-        if range.is_empty() {
-            return Ok(Snapshot::new(pool.clone(), range, Vec::new())?);
-        }
+        let scan_start = ranges
+            .iter()
+            .filter(|range| !range.is_empty())
+            .map(|range| range.start)
+            .min();
+        if let Some(scan_start) = scan_start {
+            info!("Syncing from {} to {}", scan_start, to);
 
-        //? `eth_getLogs` treats both block bounds as inclusive
-        let filter = Filter::new()
-            .address(pool.address)
-            .from_block(range.start)
-            .to_block(range.end - 1);
-        let logs = StreamedEvent::new(self.provider.clone(), filter)
-            .config(self.config)
-            .query()
-            .await?;
+            //? `eth_getLogs` treats both block bounds as inclusive
+            let filter = Filter::new()
+                .address(pools.iter().map(|pool| pool.address).collect::<Vec<_>>())
+                .from_block(scan_start)
+                .to_block(to - 1);
+            let logs = StreamedEvent::new(self.provider.clone(), filter)
+                .config(self.config)
+                .query()
+                .await?;
 
-        let mut events = Vec::new();
-        for log in logs {
-            match SyncEvent::try_from(&log) {
-                Ok(decoded) => events.push(decoded),
-                Err(LogDecodeError::UnknownEvent) => {
-                    warn!("Unknown event with topic {:?}", log.topic0());
+            for log in logs {
+                let event = match SyncEvent::try_from(&log) {
+                    Ok(event) => event,
+                    Err(LogDecodeError::UnknownEvent) => {
+                        warn!("Unknown event with topic {:?}", log.topic0());
+                        continue;
+                    }
+                    Err(e) => return Err(e.into()),
+                };
+                let block = match &event {
+                    SyncEvent::Deposit(deposit) => deposit.block_number,
+                    SyncEvent::Withdrawal(withdrawal) => withdrawal.block_number,
+                };
+
+                for ((pool, range), pool_events) in pools.iter().zip(&ranges).zip(&mut events) {
+                    //? A pool's `deployed_block` can be later than the scan start, and
+                    //? `Snapshot::new` rejects events outside the pool's range.
+                    if pool.address == log.address() && range.contains(&block) {
+                        pool_events.push(event.clone());
+                    }
                 }
-                Err(e) => return Err(e.into()),
             }
         }
 
-        info!("Synced {} events", events.len());
-        Ok(Snapshot::new(pool.clone(), range, events)?)
-    }
-
-    /// Clamps the requested range to the blocks this syncer can serve: the pool's deployment
-    /// block through the chain's latest block.
-    async fn block_range(
-        &self,
-        pool: &Pool,
-        from_block: u64,
-        to_block: u64,
-    ) -> Result<std::ops::Range<u64>, RpcSyncerError> {
-        let from = from_block.max(pool.deployed_block);
-        //? `latest_block` is an inclusive block number, `to_block` an exclusive bound.
-        let latest = self.provider.get_block_number().await?.saturating_add(1);
-        let to = to_block.min(latest).max(from);
-
-        Ok(from..to)
+        pools
+            .iter()
+            .zip(ranges)
+            .zip(events)
+            .map(|((pool, range), events)| {
+                info!("Synced {} events for {}", events.len(), pool);
+                Ok(Snapshot::new(pool.clone(), range, events)?)
+            })
+            .collect()
     }
 }
 
@@ -164,9 +182,11 @@ mod tests {
         ]);
         let provider = ProviderBuilder::new().connect_mocked_client(asserter.clone());
 
-        let snapshot = RpcSyncer::new(provider)
-            .sync_range(&pool, 0, u64::MAX)
+        let [snapshot] = RpcSyncer::new(provider)
+            .sync_range(std::slice::from_ref(&pool), 0, u64::MAX)
             .await
+            .unwrap()
+            .try_into()
             .unwrap();
 
         assert_eq!(snapshot.range(), pool.deployed_block..latest + 1);
@@ -187,6 +207,42 @@ mod tests {
                 }),
             ]
         );
+        assert!(asserter.read_q().is_empty());
+    }
+
+    #[tokio::test]
+    async fn splits_one_scan_across_pools() {
+        let first = Pool::SEPOLIA_ETHER_01;
+        let mut second = Pool::SEPOLIA_ETHER_01;
+        second.address = Address::with_last_byte(9);
+        second.deployed_block = first.deployed_block + 2;
+        let latest = first.deployed_block + 9;
+        let deposit = |leaf_index| Deposit {
+            commitment: B256::with_last_byte(1),
+            leafIndex: leaf_index,
+            timestamp: U256::ZERO,
+        };
+
+        let asserter = Asserter::new();
+        asserter.push_success(&latest);
+        asserter.push_success(&vec![
+            log_at(&first, deposit(0).encode_log_data(), first.deployed_block),
+            log_at(&second, deposit(0).encode_log_data(), second.deployed_block),
+            log_at(&first, deposit(1).encode_log_data(), latest),
+        ]);
+        let provider = ProviderBuilder::new().connect_mocked_client(asserter.clone());
+
+        let [first_snapshot, second_snapshot] = RpcSyncer::new(provider)
+            .sync_range(&[first.clone(), second.clone()], 0, u64::MAX)
+            .await
+            .unwrap()
+            .try_into()
+            .unwrap();
+
+        assert_eq!(first_snapshot.range(), first.deployed_block..latest + 1);
+        assert_eq!(first_snapshot.events().len(), 2);
+        assert_eq!(second_snapshot.range(), second.deployed_block..latest + 1);
+        assert_eq!(second_snapshot.events().len(), 1);
         assert!(asserter.read_q().is_empty());
     }
 
