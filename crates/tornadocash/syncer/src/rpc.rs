@@ -68,29 +68,24 @@ impl<P: Provider + Clone> RpcSyncer<P> {
     ) -> Result<Vec<Snapshot>, RpcSyncerError> {
         //? `latest_block` is an inclusive block number, `to_block` an exclusive bound.
         let latest = self.provider.get_block_number().await?.saturating_add(1);
-        let to = to_block.min(latest);
-        let ranges: Vec<_> = pools
-            .iter()
-            .map(|pool| {
-                let from = from_block.max(pool.deployed_block);
-                from..to.max(from)
-            })
-            .collect();
+        let range = from_block..to_block.min(latest).max(from_block);
         let mut events = vec![Vec::new(); pools.len()];
 
-        let scan_start = ranges
+        //? Blocks before a pool's deployment hold none of its events, so the scan skips them while
+        //? every snapshot still covers the whole range.
+        let scan_start = pools
             .iter()
-            .filter(|range| !range.is_empty())
-            .map(|range| range.start)
-            .min();
+            .map(|pool| range.start.max(pool.deployed_block))
+            .min()
+            .filter(|start| *start < range.end);
         if let Some(scan_start) = scan_start {
-            info!("Syncing from {} to {}", scan_start, to);
+            info!("Syncing from {} to {}", scan_start, range.end);
 
             //? `eth_getLogs` treats both block bounds as inclusive
             let filter = Filter::new()
                 .address(pools.iter().map(|pool| pool.address).collect::<Vec<_>>())
                 .from_block(scan_start)
-                .to_block(to - 1);
+                .to_block(range.end - 1);
             let logs = StreamedEvent::new(self.provider.clone(), filter)
                 .config(self.config)
                 .query()
@@ -105,15 +100,8 @@ impl<P: Provider + Clone> RpcSyncer<P> {
                     }
                     Err(e) => return Err(e.into()),
                 };
-                let block = match &event {
-                    SyncEvent::Deposit(deposit) => deposit.block_number,
-                    SyncEvent::Withdrawal(withdrawal) => withdrawal.block_number,
-                };
-
-                for ((pool, range), pool_events) in pools.iter().zip(&ranges).zip(&mut events) {
-                    //? A pool's `deployed_block` can be later than the scan start, and
-                    //? `Snapshot::new` rejects events outside the pool's range.
-                    if pool.address == log.address() && range.contains(&block) {
+                for (pool, pool_events) in pools.iter().zip(&mut events) {
+                    if pool.address == log.address() {
                         pool_events.push(event.clone());
                     }
                 }
@@ -122,11 +110,10 @@ impl<P: Provider + Clone> RpcSyncer<P> {
 
         pools
             .iter()
-            .zip(ranges)
             .zip(events)
-            .map(|((pool, range), events)| {
+            .map(|(pool, events)| {
                 info!("Synced {} events for {}", events.len(), pool);
-                Ok(Snapshot::new(pool.clone(), range, events)?)
+                Ok(Snapshot::new(pool.clone(), range.clone(), events)?)
             })
             .collect()
     }
@@ -152,7 +139,7 @@ mod tests {
     );
 
     #[tokio::test]
-    async fn syncs_events_within_clamped_range() {
+    async fn syncs_events_up_to_latest_block() {
         let pool = Pool::SEPOLIA_ETHER_01;
         let deposit_block = pool.deployed_block + 3;
         let latest = pool.deployed_block + 9;
@@ -189,7 +176,7 @@ mod tests {
             .try_into()
             .unwrap();
 
-        assert_eq!(snapshot.range(), pool.deployed_block..latest + 1);
+        assert_eq!(snapshot.range(), 0..latest + 1);
         assert_eq!(
             snapshot.events(),
             &[
@@ -215,7 +202,6 @@ mod tests {
         let first = Pool::SEPOLIA_ETHER_01;
         let mut second = Pool::SEPOLIA_ETHER_01;
         second.address = Address::with_last_byte(9);
-        second.deployed_block = first.deployed_block + 2;
         let latest = first.deployed_block + 9;
         let deposit = |leaf_index| Deposit {
             commitment: B256::with_last_byte(1),
@@ -239,9 +225,9 @@ mod tests {
             .try_into()
             .unwrap();
 
-        assert_eq!(first_snapshot.range(), first.deployed_block..latest + 1);
+        assert_eq!(first_snapshot.range(), 0..latest + 1);
         assert_eq!(first_snapshot.events().len(), 2);
-        assert_eq!(second_snapshot.range(), second.deployed_block..latest + 1);
+        assert_eq!(second_snapshot.range(), 0..latest + 1);
         assert_eq!(second_snapshot.events().len(), 1);
         assert!(asserter.read_q().is_empty());
     }
